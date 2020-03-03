@@ -32,7 +32,12 @@ fly.interceptors.response.use(
         //只将请求结果的data字段返回
         if (response.status == 200) {
             // return JSON.parse(response.data);
-            return Promise.resolve(response.data);
+            try {
+                let data = JSON.parse(response.data)
+                return Promise.resolve(data);
+            } catch {
+                return Promise.reject('数据解析错误，请重试')                
+            }
         } else {
             return Promise.reject(response + '错误')
         }

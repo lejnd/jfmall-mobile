@@ -12,6 +12,7 @@ module.exports = {
             '/ydjf': {
                 ws: false,
                 target: 'http://test.kmfx1.com', 
+                // target: 'http://test1127.kmfx1.com', 
                 changOrigin: true,
                 // pathRewrite: {
                 //     '^/ydjf': 'ydjf1'

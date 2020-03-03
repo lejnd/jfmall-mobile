@@ -1,6 +1,6 @@
 <template>
 <div class='my-order bg-f5'>
-    <topbar title="我的订单"></topbar> 
+    <topbar title="我的订单"></topbar>
     <div class="container">
         <div class="nothing" v-if="nothing">
             <img src="../assets/img/nothing.png" alt="">

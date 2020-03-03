@@ -29,6 +29,12 @@ const router = new Router({
             meta: {}
         },
         {
+            path: '/question',
+            name: 'question',
+            component: () => import(/* webpackChunkName: "question" */ './views/question.vue'),
+            meta: {}
+        },
+        {
             path: '/region',
             name: 'regionInfo',
             component: () => import( /* webpackChunkName: "regionInfo" */ './views/regionInfo.vue')

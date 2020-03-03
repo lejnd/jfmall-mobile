@@ -15,15 +15,6 @@
         <div class="checkout">
             <h3 class="title">可兑换积分产品：</h3>
             <div class="checkout-content">
-                <!-- <div
-                    class="item"
-                    v-for="(item, index) in items"
-                    :key="index"
-                    :class="{ 'checked': checked==index }"
-                    @click="checked=index"
-                >
-                    {{item.value}}
-                </div> -->
                 <van-button
                     class="item"
                     v-for="(item, index) in products"
@@ -37,7 +28,23 @@
                     {{item.name}}
                 </van-button>
             </div>
-            <div class="sh-info" v-if="checked!=-1">
+            <h3 class="title">话费兑换： (兑换比例：100积分 = 1元)</h3>
+            <div class="checkout-content">
+                <van-button
+                    class="item"
+                    v-for="(item, index) in phoneBills"
+                    :key="index"
+                    :plain="checkedBill!=index"
+                    @click="checkedBillHandler(index, item)"
+                    hairline
+                    type="info"
+                    :disabled="(item*100)>thisScore"
+                >
+                    {{item}}元
+                </van-button>
+            </div>
+            <!-- <p class="need-score">积分合计<strong>{{phoneBills[checkedBill]*100}}</strong>分</p> -->
+            <div class="sh-info" v-show="checked!=-1">
                 <p class="title" style="padding-top:15px;background:#f5f5f5;">选择发货商品：</p>
                 <van-radio-group v-model="goodsRadio">
                     <van-cell-group>
@@ -48,17 +55,53 @@
                 </van-radio-group>
                 <p class="title" style="padding-top:20px;background:#f5f5f5;">填写收货地址：</p>
                 <van-cell-group>
-                    <van-field v-model="name" label="姓名" placeholder="请输入姓名" />
-                    <van-field v-model="sjmobile" type="tel" label="手机号" placeholder="请输入收件人手机号" />
-                    <van-field v-model="areaName" type="textarea" label="选择地区" readonly placeholder="请选择地区" @click="areaShow=true" />
-                    <van-field v-model="address" type="textarea" label="详细地址" placeholder="请输入详细地址" />
+                    <van-field v-model="name" label="姓名：" placeholder="请输入姓名" />
+                    <van-field v-model="sjmobile" type="tel" label="手机号：" placeholder="请输入收件人手机号" />
+                    <!-- <van-field v-model="areaName" type="textarea" label="选择地区" readonly placeholder="请选择地区" @click="areaShow=true" /> -->
+                    <area-select
+                        :mobile="sjmobile"
+                        @getArea="getAreaName"
+                    ></area-select>
+                    <van-field v-model="address" type="textarea" label="详细地址：" placeholder="请输入详细地址" />
                     <!-- <van-field v-model="postcode" type="number" label="邮编" placeholder="请输入收件人邮编" /> -->
                 </van-cell-group>
             </div>
         </div>
         <div class="btn-wp">
             <van-button class="btn" type="info" @click="confirmCheck" :disabled="confirmCheckText=='积分不足'||thisScore==0" :loading="confirmCheckLoading" loading-type="spinner">{{confirmCheckText}}</van-button>
-            <van-button class="btn text-btn" type="info" plain to="/order">查看我的订单</van-button>
+            <!-- <van-button class="btn text-btn" type="info" plain to="/order">我的订单</van-button> -->
+            <div class="btn-row">
+                <van-button class="text-btn" type="info" plain to="/order">我的订单</van-button>
+                <span class="line">|</span>
+                <van-button class="text-btn" type="info" plain to="/question">常见问题</van-button>
+            </div>
+        </div>
+        <!-- <div class="notice-wp">
+            <h3 class="title">开场白：</h3>
+            <p>先生/女士您好，我是移动积分商城的客服人员，您的部分积分快要清零现在可以兑换礼品和话费，您这边需要兑换吗？</p>
+        </div>
+        <div class="notice-wp">
+            <h3 class="title">注意事项：</h3>
+            <p>1、积分是部分清零，积分可以兑换话费，讲清楚对应积分值兑换的礼品。</p>
+            <p>2、不能包含有免费，比如：免费兑换、免费包邮。</p>
+            <p>3、对客户必须礼貌，遇到不礼貌的客户就登记下来，以后我们不再打扰他。</p>
+        </div> -->
+        <div class="notice-wp">
+            <h3 class="title">业务介绍规范（必须遵守）</h3>
+            <p>1、要讲积分可以兑换话费，若讲不能兑换话费，将负法律责任。</p>
+            <p>2、不能与客户争吵，辱骂客户等。若有发生，立即开除。</p>
+            <p>3、不能讲积分全部清零，2018年12月31日前的积分2020年12月15日清零。</p>
+            <p>4、不能讲免费兑换，要讲清楚多少分值兑换什么礼品。</p>
+            <p>5、解释非短信内容礼品与客户所选礼品的关系。若有投诉，就要罚款！</p>
+            <p>6、态度恶劣、表示活动不真实、再呼要投诉等客户就登记为敏感客户。</p>
+        </div>
+        <div class="notice2">
+            <h3 class="title">外呼脚本</h3>
+            <p class="first">您好，您是尾号****的客户吗，我是<strong>移动积分商城</strong>的工作人员，您的积分现在<strong>可以兑换礼品和话费</strong>，礼品是邮寄到家，话费是立即到账。我这边帮您兑换一下可以吗？</p>
+            <p><span>客户同意：</span>我这边用10658999开头的号码给您发一个6位数的验证码，给您查询一下有多少积分，您注意查收一下………….，您的积分有****，可以兑换**话费和**礼品，我先给您兑换话费，稍后再登记收货信息。下面按照操作进行。</p>
+            <p><span>客户犹豫（不相信）：</span>挽留客户（感觉很反感的客户就不再挽留），我可以先给您兑换话费，礼品是邮寄到家，您可以加我微信，后期hi可以联系我。兑换成功后您还还可以收到10086 的短信，同时我们发货后也要把快递单号短信发给你。</p>
+            <p><span>客户明确拒绝：</span>好的，感谢您的接听，再见！</p>
+            <p><span>客户态度不好：</span>加入敏感客户，下次不再打扰。</p>
         </div>
     </div>
     <van-dialog
@@ -71,6 +114,7 @@
             <div class="form-wp">
                 <van-cell-group>
                     <van-field v-model="mobile" type="tel" placeholder="输入手机号">
+                        <van-button slot="button" style="height:36px;line-height:34px;" type="warning" plain round @click="pullBlock">加入敏感客户</van-button>
                     </van-field>
                 </van-cell-group>
                 <van-cell-group class="flex-box">
@@ -138,7 +182,7 @@
             <van-button v-if="errorType==2" class="btn" type="info" @click="showError=false">关闭</van-button>
         </div>
     </van-dialog>
-    <van-popup v-model="areaShow" position="bottom">
+    <!-- <van-popup v-model="areaShow" position="bottom">
         <van-area
             :area-list="areaList"
             :value="mobileLoc"
@@ -146,23 +190,23 @@
             @cancel="areaShow=false"
             :visible-item-count="9"
         />
-    </van-popup>
+    </van-popup> -->
 </div>
 </template>
 
 <script>
 import HomeTop from '@/components/home-top.vue';
 import SmscodeBtn from '@/components/smscode-button.vue';
+import AreaSelect from '@/components/area-select.vue';
 import common from '@/components/common';
 import areaList from '@/area';
 import { mapGetters, mapActions } from 'vuex';
-import { setInterval } from 'timers';
 
 const OVER_TIME = 60;
 
 export default {
     name: 'Home',
-    components: { HomeTop, SmscodeBtn },
+    components: { HomeTop, SmscodeBtn, AreaSelect },
     data() {
         return {
             queryDialog: false,
@@ -177,7 +221,7 @@ export default {
             confirmCheckLoading: false,
             userName: '',
             orderid: '',
-            // exchange错误处理
+            /* exchange错误处理 */
             showError: false,
             errorType: 0,
             // showError: true,
@@ -185,7 +229,7 @@ export default {
             errMsg: '',
             awaitTime: OVER_TIME,
             awaitTimeIntv: null,
-            // 收货信息
+            /* 收货信息 */
             name: '',
             sjmobile: '',
             areaName: '',
@@ -196,6 +240,9 @@ export default {
             mobileLoc: '',
             productList: [],
             goodsRadio: 1,
+            /* 话费兑换data */
+            phoneBills: [5, 10, 15, 20, 30, 40, 50],
+            checkedBill: -1,
         };
     },
     computed: {
@@ -206,71 +253,31 @@ export default {
             return this.kyjf ? parseInt(this.kyjf) : 0;
         },
         confirmCheckText() {
-            return this.products.filter(item => item.score<this.thisScore).length == 0 && this.thisScore != 0 ? '积分不足' : '去兑换'
+            let scores = this.products.map(item => parseInt(item.score));
+            let minScore = Math.min.apply(Math, scores)
+            let minBill = this.phoneBills[0];
+            let min = Math.min.apply(Math, [minScore, minBill*100]);
+            // console.log(scores, minScore, minBill, min);
+            // return this.products.filter(item => item.score<this.thisScore).length == 0 && this.thisScore != 0 ? '积分不足' : '去兑换'
+            return this.thisScore < min && this.thisScore != 0 ? '积分不足' : '去兑换'
         },
         canIexchange() {
             if (!this.item) return false;
-            let Dvalue = parseInt(this.kyjf) - parseInt(this.item.score);
-            return this.products.some(item => Dvalue >= parseInt(item.score))
+            let Dvalue = this.item.score ? parseInt(this.kyjf) - parseInt(this.item.score) : parseInt(this.kyjf) - parseInt(this.item)*100;
+            let scores = this.products.map(item => parseInt(item.score));
+            let minScore = Math.min.apply(Math, scores)
+            let minBill = this.phoneBills[0];
+            let min = Math.min.apply(Math, [minScore, minBill*100]);
+            return Dvalue >= min;
         }
     },
     watch: {
-        // 收货号码变化的时候，获取手机号归属地
-        sjmobile(v, o) {
-            if (common.isVerificationNumber(v)) {
-                this.$fly.get('/ydjf/getmobileloc', { mobile: v })
-                .then((res) => {
-                    if (typeof res === 'string') res = JSON.parse(res);
-                    let { content } = res;
-                    content = JSON.parse(content)
-                    let city = content.response[v].detail.area[0].city;
-                    let province = content.response[v].detail.province;
-                    let provinceList = this.areaList.province_list;
-                    let cityList = this.areaList.city_list;
-                    let cityName = '';
-                    let provinceName = '';
-                    for (const key in cityList) {
-                        const element = cityList[key];
-                        if (element.includes(city)) {
-                            this.mobileLoc = key;
-                            cityName = cityList[key];
-                        }
-                    }
-                    for (const key in provinceList) {
-                        const element = provinceList[key];
-                        if (element.includes(province)) {
-                            provinceName = provinceList[key];
-                        }
-                    }
-                    this.areaName = provinceName + ' ' + cityName + ' ';
-                }).catch((err) => {
-                    this.$dialog.alert({
-                        title: '错误',
-                        message: err,
-                        confirmButtonText: '关闭'
-                    });
-                })
-            }
-        },
         // 查询手机号变化的时候，检测是否输入重复手机号
         mobile(v, o) {
             if (common.isVerificationNumber(v)) {
                 this.$refs.getQueryCode.clearTimer();
             }
         },
-        // verifyCode(v, o) {
-        //     if (v.length != 6) return false;
-        //     if (v == sessionStorage.getItem('verifyCode')) {
-        //         this.$dialog.alert({
-        //             title: '提示',
-        //             message: '请输入最新的验证码！'
-        //         }).then(() => {
-        //             this.verifyCode = '';
-        //         })
-        //     } else {
-        //         sessionStorage.setItem('verifyCode', v);
-        //     }
-        // }
     },
     methods: {
         ...mapActions([
@@ -286,7 +293,7 @@ export default {
         getCode(mobile) {
             this.$fly.post('/ydjf/sendydcode', common.obj2formdata({ mobile }))
             .then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 this.$toast(m);
             }).catch((err) => {
@@ -301,7 +308,7 @@ export default {
         getConfirmcode(mobile) {
             this.$fly.post('/ydjf/sendconfirmcode', common.obj2formdata({ mobile }))
             .then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 this.$toast(m);
             }).catch((err) => {
@@ -339,24 +346,37 @@ export default {
                     return false
                 }
                 sessionStorage.setItem('confirmcode', this.confirmcode);
-                let data = {
-                    mobile: this.mobile,
-                    code: this.confirmcode,
-                    servicepassword: encodeForPwd(this.servicepassword),
-                    // scoreid: this.item.id,
-                    orderid: this.orderid,
-                    score: parseInt(this.kyjf) - parseInt(this.item.score),
-                    adminid: localStorage.getItem('loginId'),
-                    // 给移动的收货信息
-                    shmobile: this.sjmobile,
-                    shname: this.name,
-                    shadd: this.areaName + this.address,
-                    postcode: this.postcode,
+                let data = {};
+                if (this.checked != -1) {
+                    data = {
+                        mobile: this.mobile,
+                        code: this.confirmcode,
+                        servicepassword: encodeForPwd(this.servicepassword),
+                        // scoreid: this.item.id,
+                        orderid: this.orderid,
+                        score: parseInt(this.kyjf) - parseInt(this.item.score),
+                        adminid: localStorage.getItem('loginId'),
+                        // 给移动的收货信息
+                        shmobile: this.sjmobile,
+                        shname: this.name,
+                        shadd: this.areaName + ' ' + this.address,
+                        postcode: this.postcode,
+                    }
+                } else if (this.checkedBill != -1) {
+                    data = {
+                        hf: this.item,
+                        code: this.confirmcode,
+                        mobile: this.mobile,
+                    }
+                } else {
+                    this.$toast('系统出错，请重试！')
+                    done(false)
+                    return false
                 }
                 this.errorTypeDialog(true, 0);
                 this.$fly.post('/ydjf/exchange', common.obj2formdata(data))
                 .then((res) => {
-                    if (typeof res === 'string') res = JSON.parse(res);
+                    if (res && typeof res === 'string') res = JSON.parse(res);
                     let { d, m, s } = res;
                     if (s == 1) {
                         this.errorTypeDialog(true, 1);
@@ -368,8 +388,8 @@ export default {
                         done(false);
                     }
                 }).catch((err) => {
-                    this.errorTypeDialog(true, 2, err);                    
-                    // this.$toast('登录失效或系统错误');
+                    // this.errorTypeDialog(true, 2, err);
+                    this.$toast('登录失效或系统错误');
                     done(false);
                 })
             } else {
@@ -384,7 +404,12 @@ export default {
             if (type == 0) {
                 this.awaitTime = OVER_TIME;
                 this.awaitTimeIntv = window.setInterval(() => {
-                    this.awaitTime--;
+                    if (this.awaitTime <= 0) {
+                        window.clearInterval(this.awaitTimeIntv)
+                        this.awaitTime = 0;
+                    } else {
+                        this.awaitTime--;
+                    }                    
                 }, 1000)
             }
         },
@@ -427,7 +452,7 @@ export default {
                 });
                 this.$fly.post('/ydjf/logintoyd', common.obj2formdata(data))
                 .then((res) => {
-                    if (typeof res === 'string') res = JSON.parse(res);
+                    if (res && typeof res === 'string') res = JSON.parse(res);
                     let { d, m, s } = res;
                     if (s == 1) {
                         this.$toast.success({
@@ -435,7 +460,7 @@ export default {
                             duration: 2000,
                         });
                         this.kyjf = d.kyjf || ''
-                        // this.kyjf = '35550'
+                        // this.kyjf = '90000'
                         done();                     
                     } else {
                         this.$toast.clear();
@@ -461,17 +486,29 @@ export default {
         },
         // 选择积分包切换
         checkedHandler(index, item) {
+            this.checkedBill = -1;   // 先取消话费兑换的选择
             this.checked = index;
             this.item = item;
             // 初始化收货信息
             this.goodsRadio = 1;
             this.sjmobile = this.mobile;
-            this.productItem = this.products.find(el => el.id == item.id) || {};            
+            this.productItem = this.products.find(el => el.id == item.id) || {};
             let productsArr = this.productItem.goods || '';
             this.productList = productsArr.split(',') || [];
         },
-        // 确认选择积分包
+        // 确认选择 积分产品 or 话费
         confirmCheck() {
+            if (this.checked != -1) {
+                this.confirmCheckProduct();
+            } else if (this.checkedBill != -1) {
+                this.submitDialog = true;
+            } else {
+                this.$toast('请先选择！')
+            }
+        },
+        // 确认选择积分包
+        confirmCheckProduct() {
+            this.address = this.address.replace(/\s/g, '');
             if (!this.item) {
                 this.$notify('请先选择积分产品')
                 return false
@@ -516,7 +553,7 @@ export default {
                 score: this.item.score,
                 mobile: this.mobile,
             })).then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 if (s == 1) {
                     return Promise.resolve();                    
@@ -533,7 +570,7 @@ export default {
                 adminid: localStorage.getItem('loginId'),
                 mobile: this.mobile,
             })).then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 if (s == 1) {
                     this.orderid = d;
@@ -550,10 +587,10 @@ export default {
                 name: this.name,
                 sjmobile: this.sjmobile,
                 orderid: this.orderid,
-                address: this.areaName + this.address,
+                address: this.areaName + ' ' + this.address,
                 goods: this.productList[this.goodsRadio-1]
             })).then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 if (s == 1) {
                     return Promise.resolve();
@@ -568,13 +605,16 @@ export default {
         clearCookies() {
             return this.$fly.post('/ydjf/clearcookies')
             .then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
                 let { d, m, s } = res;
                 if (s == 1) {
                     this.kyjf = '';
                     this.mobile = '';
                     this.verifyCode = '';
+                    this.confirmcode = '';
                     this.checked = -1;
+                    this.checkedBill = -1;
+                    this.item = null;
                     if (this.$refs.getConfirmcode) {
                         this.$refs.getConfirmcode.clearTimer();
                     }
@@ -610,7 +650,7 @@ export default {
         testAPI() {
             return this.$fly.post('/ydjf/test')
             .then((res) => {
-                if (typeof res === 'string') res = JSON.parse(res);
+                if (res && typeof res === 'string') res = JSON.parse(res);
             })
         },
 
@@ -625,17 +665,60 @@ export default {
         },
         // 继续办单
         continueHandle() {
-            this.kyjf = parseInt(this.kyjf) - parseInt(this.item.score);
+            this.item.score ?
+            this.kyjf = parseInt(this.kyjf) - parseInt(this.item.score) :
+            this.kyjf = parseInt(this.kyjf) - parseInt(this.item)*100;
             this.item = null;
             this.checked = null;
+            this.checkedBill = -1;
             this.showError = false;
         },
 
         // 选择商品、收货地址相关操作
-        confirmArea(area) {
-            this.areaName = `${area[0].name} ${area[1].name} ${area[2].name} `;
-            this.areaShow = false;
+        // confirmArea(area) {
+        //     this.areaName = `${area[0].name} ${area[1].name} ${area[2].name} `;
+        //     this.areaShow = false;
+        // },
+        getAreaName(area) {
+            this.areaName = area;
         },
+        /* 话费兑换 */
+        checkedBillHandler(index, item) {
+            this.checked = -1;   // 先取消产品兑换的选择
+            this.checkedBill = index;
+            this.item = item;
+        },
+        // 加入黑名单
+        pullBlock() {
+            if (!this.mobile) {
+                this.$toast('请输入手机号再拉黑')
+                return false
+            }
+            if (!common.isVerificationNumber(this.mobile)) {
+                this.$toast('手机号格式不对')
+                return false
+            }
+            this.$dialog.confirm({
+                title: '提示',
+                message: `确定将${this.mobile}加入黑名单吗？`
+            }).then(() => {
+                this.$fly.post('/ydjf/blacked', common.obj2formdata({
+                    adminid: localStorage.getItem('loginId'),
+                    mobile: this.mobile,
+                })).then((res) => {
+                    if (res && typeof res === 'string') res = JSON.parse(res);
+                    let { d, m, s } = res;
+                    if (s == 1) {
+                        this.$toast(m);
+                        this.mobile = '';                        
+                    } else {
+                        this.$toast(m);
+                    }
+                }).catch((err) => {
+                    this.$toast(err || '未知错误')
+                })
+            })
+        }
     },
     mounted() {
         this.getProducts()
@@ -695,6 +778,20 @@ export default {
                 color: rgba(69, 90, 100, 0.6);
                 font-weight: normal;
                 font-size: 14px;
+                display: flex;
+                align-items:baseline;
+                // justify-content: space-between;
+            }
+            .need-score {
+                padding-top: 18px;
+                font-size: 12px;
+                text-align: center;
+                color: #f60;
+                strong {
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin: 0 5px;
+                }
             }
             .checkout-content {
                 display: flex;
@@ -703,6 +800,9 @@ export default {
                 .item {
                     // border-radius: 6px;
                     margin: 0 8px 8px 0;
+                    height: 36px;
+                    line-height: 34px;
+                    padding: 0 12px;
                 }
             }
             .sh-info {
@@ -710,6 +810,7 @@ export default {
                 // width: 80%;
                 margin: 0 15px;
                 border-radius: 5px;
+                margin-top: 15px;
                 .van-cell {
                     padding: 10px 16px;
                 }
@@ -720,13 +821,62 @@ export default {
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 30px 0;
+            margin: 30px 0 15px 0;
             .btn {
                 width: 200px;
                 margin-bottom: 10px;
             }
             .text-btn {
                 border: 0;
+            }
+            .btn-row {
+                display: flex;
+                justify-content:center;
+                align-items: center;
+                .line {
+                    color: #409eff;
+                }
+            }
+        }
+        .notice-wp {
+            border-top: 1px solid #ddd;
+            padding: 15px 5px;
+            margin: 0 15px;
+            line-height: 1.8;
+            .title {
+                color: #f40;
+                font-size: 20px;
+                font-size: 700;
+            }
+            p {
+                font-size: 15px;
+                color: #838383;
+            }
+        }
+        .notice2 {
+            border-top: 1px solid #ddd;
+            padding: 15px 5px;
+            margin: 0 15px;
+            .title {
+                color: #f40;
+                font-size: 20px;
+                font-size: 700;
+            }
+            p {
+                font-size: 15px;
+                color: #838383;
+                padding: 5px 0;
+                &.first {
+                    text-indent: 2em;
+                }
+                span {
+                    color: #555;
+                    font-weight: 700;
+                }
+                strong {
+                    background-color: #ffdada;
+                    color: #333;
+                }
             }
         }
     }

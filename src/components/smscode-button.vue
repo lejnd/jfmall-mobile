@@ -84,7 +84,7 @@ export default {
             }, 1000)
         },
         clearTimer() {
-            console.log('clearTimer');
+            // console.log('clearTimer');
             clearInterval(this.timer);
             this.text = '获取验证码';
             this.count = this.delayed;
